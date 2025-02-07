@@ -14,6 +14,7 @@ pub struct Markdown {
 #[derive(Debug)]
 pub struct Twig {
     pub file: File,
+    pub template: String,
 }
 
 #[derive(serde::Deserialize)]
@@ -22,14 +23,19 @@ struct Meta {
     slug: String,
     date: String,
     intro: String,
+    template_base: Option<String>,
 }
 
 impl Twig {
-    pub fn new(file: File) -> Twig {
-        Twig { file }
+    pub fn new(file: File, template: &String) -> Twig {
+        Twig {
+            file,
+            template: String::from(template),
+        }
     }
     pub fn to_html(&self, data: Context) -> Result<String, Error> {
-        let tera = Tera::new("./tests/template/pages/**/*")?;
+        let template_pages = format!("{}/{}", self.template, "/pages/**/*");
+        let tera = Tera::new(template_pages.as_str())?;
         let path: &str = Path::new(&self.file.location)
             .file_name()
             .unwrap()
@@ -61,7 +67,14 @@ impl Markdown {
         html::push_html(&mut html_output, parser);
 
         let meta: Meta = serde_yaml::from_str(yaml_content)?;
-        let post = Post::new(meta.title, meta.slug, meta.date, meta.intro, html_output);
+        let post = Post::new(
+            meta.title,
+            meta.slug,
+            meta.date,
+            meta.intro,
+            html_output,
+            meta.template_base,
+        );
 
         Ok(post)
     }

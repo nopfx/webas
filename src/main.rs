@@ -16,14 +16,9 @@ use std::path::Path;
 use tera::Context;
 
 fn main() {
-    // tests/template/posts/
-    // --template tests/template
     let template_location = cli::get::<String>("template".into()).unwrap_or("".into());
-    // --web ./tests/web
     let web_location = cli::get::<String>("web".into()).unwrap_or("./".into());
 
-    // TODO:
-    // make checks for required CLI params
     if Path::new(&web_location).exists() {
         fs::remove_dir_all(&web_location).unwrap();
     }
@@ -48,7 +43,7 @@ fn main() {
         "twig".into(),
     )
     .into_iter()
-    .map(|f| Twig::new(f))
+    .map(|f| Twig::new(f, &template_location))
     .collect();
 
     for template in templates {
@@ -63,6 +58,6 @@ fn main() {
     }
 
     for post in &posts {
-        let _ = post.create(String::from(&web_location));
+        let _ = post.create(&template_location, &web_location);
     }
 }
