@@ -39,10 +39,15 @@ Markdown content...               # Main content, rendered into the Twig templat
 Use Twig blocks to inject content from your Markdown files into the templates:
 
 ```
-{% block title %} # Injects the "title" metadata from the Markdown  
-{% block date %}  # Injects the "date" metadata from the Markdown  
-{% block intro %} # Injects the "intro" metadata from the Markdown  
-{% block main %}  # Renders the Markdown content as HTML
+{% block main %}  # Renders the Markdown content as HTML  
+```
+
+All post meta variables is reachable over context:
+```
+{{post.title}}
+{{post.slug}}
+{{post.date}}
+{{post.intro}}
 ```
 
 🔧 TODO
