@@ -43,18 +43,8 @@ impl Post {
             let tbase = format!("{} \"{}\" {}", "{%extends", base, "%}");
             html.push_str(&tbase);
         }
-        //let title =
-        //    String::from("{% block title %}") + self.title.as_str() + "{% endblock title %}";
-        //let date = String::from("{% block date %}") + self.date.as_str() + "{% endblock date %}";
-        //let slug = String::from("{% block slug %}") + self.slug.as_str() + "{% endblock slug %}";
-        //let intro =
-        //    String::from("{% block intro %}") + self.intro.as_str() + "{% endblock intro %}";
         let body = String::from("{% block main %}") + self.text.as_str() + "{% endblock main %}";
 
-        //html.push_str(&title);
-        //html.push_str(&date);
-        //html.push_str(&slug);
-        //html.push_str(&intro);
         html.push_str(&body);
 
         let template_pages = format!("{}/{}", template, "/pages/**/*");
