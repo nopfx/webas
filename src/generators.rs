@@ -21,6 +21,7 @@ pub struct Twig {
 struct Meta {
     title: String,
     slug: String,
+    author: String,
     date: String,
     intro: String,
     template_base: Option<String>,
@@ -70,6 +71,7 @@ impl Markdown {
         let post = Post::new(
             meta.title,
             meta.slug,
+            meta.author,
             meta.date,
             meta.intro,
             html_output,

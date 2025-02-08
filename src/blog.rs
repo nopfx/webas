@@ -11,6 +11,8 @@ pub struct Post {
     pub slug: String,
     pub date: String,
     pub intro: String,
+    pub author: String,
+    pub size: String,
     pub text: String,
 }
 
@@ -18,16 +20,24 @@ impl Post {
     pub fn new(
         title: String,
         slug: String,
+        author: String,
         date: String,
         intro: String,
         text: String,
         template_base: Option<String>,
     ) -> Post {
+        let size_count: usize = text.as_bytes().len() / 1024;
+        let mut size = format!("{}Kb", size_count);
+        if size_count <= 1 {
+            size = format!("{}b", text.as_bytes().len());
+        }
         Post {
             template_base,
             title,
             slug,
+            author,
             date,
+            size,
             intro,
             text,
         }
