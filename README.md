@@ -48,6 +48,7 @@ All post meta variables is reachable over context:
 {{post.slug}}
 {{post.date}}
 {{post.intro}}
+{{post.size}}
 ```
 
 🔧 TODO

@@ -19,11 +19,17 @@ pub struct Twig {
 
 #[derive(serde::Deserialize)]
 struct Meta {
+    #[serde(default)]
     title: String,
+    #[serde(default)]
     slug: String,
+    #[serde(default)]
     author: String,
+    #[serde(default)]
     date: String,
+    #[serde(default)]
     intro: String,
+    #[serde(default)]
     template_base: Option<String>,
 }
 
@@ -60,6 +66,7 @@ impl Markdown {
             .captures(content.as_str())
             .ok_or("Invalid markdown file format")
             .unwrap();
+
         let yaml_content = captures.get(1).map(|m| m.as_str()).unwrap_or("");
         let markdown_content = captures.get(2).map(|m| m.as_str()).unwrap_or("");
         let parser = Parser::new_ext(markdown_content, Options::all());
