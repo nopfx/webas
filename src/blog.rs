@@ -44,8 +44,8 @@ impl Post {
     }
     pub fn create(&self, template: &String, location: &String) -> Result<()> {
         let loc = format!("{}/{}", &location, &self.slug);
-
         let loc = Path::new(&loc);
+
         let mut file = File::create(&loc).unwrap();
         let mut html: String = String::new();
 

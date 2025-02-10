@@ -17,19 +17,13 @@ pub struct Twig {
     pub template: String,
 }
 
-#[derive(serde::Deserialize)]
+#[derive(serde::Deserialize, Default)]
 struct Meta {
-    #[serde(default)]
-    title: String,
-    #[serde(default)]
-    slug: String,
-    #[serde(default)]
-    author: String,
-    #[serde(default)]
-    date: String,
-    #[serde(default)]
-    intro: String,
-    #[serde(default)]
+    title: Option<String>,
+    slug: Option<String>,
+    author: Option<String>,
+    date: Option<String>,
+    intro: Option<String>,
     template_base: Option<String>,
 }
 
@@ -58,29 +52,36 @@ impl Markdown {
         Markdown { file }
     }
 
-    pub fn to_post(&self) -> Result<Post, serde_yaml::Error> {
+    pub fn to_post(&self) -> Result<Post, Error> {
         let content = self.file.content().unwrap_or("".into());
 
-        let re = Regex::new(r"(?s)---\n(.*?)\n---\n(.*)").unwrap();
+        let re = Regex::new(r"(?s)---\n(.*?)\n---\n(.*)").expect("Cant make regex");
         let captures = re
             .captures(content.as_str())
-            .ok_or("Invalid markdown file format")
-            .unwrap();
+            .expect("Meta required for Markdowns");
 
-        let yaml_content = captures.get(1).map(|m| m.as_str()).unwrap_or("");
-        let markdown_content = captures.get(2).map(|m| m.as_str()).unwrap_or("");
+        let markdown_content = captures
+            .get(2)
+            .map(|m| m.as_str())
+            .expect("Markdown is required");
+        let yaml_content = captures
+            .get(1)
+            .map(|m| m.as_str())
+            .expect("Metadata is required for Markdown post");
+
         let parser = Parser::new_ext(markdown_content, Options::all());
 
         let mut html_output = String::new();
         html::push_html(&mut html_output, parser);
 
-        let meta: Meta = serde_yaml::from_str(yaml_content)?;
+        let meta: Meta = serde_yaml::from_str(yaml_content).unwrap_or_default();
+
         let post = Post::new(
-            meta.title,
-            meta.slug,
-            meta.author,
-            meta.date,
-            meta.intro,
+            meta.title.unwrap_or("no-title-in-meta".into()),
+            meta.slug.unwrap_or("no-slug-in-meta.html".into()),
+            meta.author.unwrap_or("".into()),
+            meta.date.unwrap_or("".into()),
+            meta.intro.unwrap_or("".into()),
             html_output,
             meta.template_base,
         );
