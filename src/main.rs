@@ -32,19 +32,17 @@ fn main() {
     copy(src_folder, dst_folder, &options).unwrap();
 
     let posts: Vec<Post> =
-        loaders::get_files_by_type(format!("{}/{}", &template_location, "/posts"), "md".into())
+        loaders::get_files_by_type(format!("{}/{}", &template_location, "posts"), "md".into())
             .into_iter()
             .map(|f| Markdown::new(f))
             .map(|m| m.to_post().unwrap())
             .collect();
 
-    let templates: Vec<Twig> = loaders::get_files_by_type(
-        format!("{}/{}", &template_location, "/pages"),
-        "twig".into(),
-    )
-    .into_iter()
-    .map(|f| Twig::new(f, &template_location))
-    .collect();
+    let templates: Vec<Twig> =
+        loaders::get_files_by_type(format!("{}/{}", &template_location, "pages"), "twig".into())
+            .into_iter()
+            .map(|f| Twig::new(f, &template_location))
+            .collect();
 
     for template in templates {
         let mut context = Context::new();

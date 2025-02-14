@@ -55,7 +55,7 @@ impl Markdown {
     pub fn to_post(&self) -> Result<Post, Error> {
         let content = self.file.content().unwrap_or("".into());
 
-        let re = Regex::new(r"(?s)---\n(.*?)\n---\n(.*)").expect("Cant make regex");
+        let re = Regex::new(r"(?s)---(.*?)\n(.*?)\n---(.*?)\n(.*)").expect("Cant make regex");
         let captures = re
             .captures(content.as_str())
             .expect("Meta required for Markdowns");
