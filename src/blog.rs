@@ -1,3 +1,4 @@
+use regex::Regex;
 use std::fs::File;
 use std::io::{Result, Write};
 use std::path::Path;
@@ -26,10 +27,10 @@ impl Post {
         text: String,
         template_base: Option<String>,
     ) -> Post {
-        let size_count: usize = text.as_bytes().len() / 1024;
+        let size_count: usize = text.len() / 1024;
         let mut size = format!("{}Kb", size_count);
         if size_count <= 1 {
-            size = format!("{}b", text.as_bytes().len());
+            size = format!("{}b", text.len());
         }
         Post {
             template_base,
@@ -46,7 +47,7 @@ impl Post {
         let loc = format!("{}/{}", &location, &self.slug);
         let loc = Path::new(&loc);
 
-        let mut file = File::create(&loc).unwrap();
+        let mut file = File::create(loc).unwrap();
         let mut html: String = String::new();
 
         if let Some(base) = &self.template_base {
@@ -59,12 +60,21 @@ impl Post {
 
         let template_pages = format!("{}/{}", template, "/pages/**/*");
         let mut tera = Tera::new(&template_pages).unwrap();
-        let _ = tera.add_raw_template(&loc.to_str().unwrap(), html.as_str());
+        let _ = tera.add_raw_template(loc.to_str().unwrap(), html.as_str());
         let mut context = Context::new();
         context.insert("post", &self);
-        let output = tera.render(&loc.to_str().unwrap(), &context).unwrap();
+        let output = tera.render(loc.to_str().unwrap(), &context).unwrap();
 
-        file.write_all(output.as_bytes())?;
+        let mut clean_html = Regex::new(r"\r?\n")
+            .unwrap()
+            .replace_all(&output, "")
+            .to_string();
+        clean_html = Regex::new(r">\s+<")
+            .unwrap()
+            .replace_all(&clean_html, "><")
+            .to_string();
+
+        file.write_all(clean_html.as_bytes())?;
 
         Ok(())
     }
