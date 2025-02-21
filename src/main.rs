@@ -2,6 +2,7 @@ mod blog;
 mod cli;
 mod generators;
 mod loaders;
+mod parsers;
 mod readers;
 
 use blog::Post;

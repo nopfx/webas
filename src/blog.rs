@@ -1,8 +1,8 @@
-use regex::Regex;
 use std::fs::File;
 use std::io::{Result, Write};
 use std::path::Path;
 
+use crate::parsers::clean_html;
 use tera::{Context, Tera};
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
@@ -43,6 +43,7 @@ impl Post {
             text,
         }
     }
+
     pub fn create(&self, template: &String, location: &String) -> Result<()> {
         let loc = format!("{}/{}", &location, &self.slug);
         let loc = Path::new(&loc);
@@ -65,14 +66,7 @@ impl Post {
         context.insert("post", &self);
         let output = tera.render(loc.to_str().unwrap(), &context).unwrap();
 
-        let mut clean_html = Regex::new(r"\r?\n")
-            .unwrap()
-            .replace_all(&output, "")
-            .to_string();
-        clean_html = Regex::new(r">\s+<")
-            .unwrap()
-            .replace_all(&clean_html, "><")
-            .to_string();
+        let clean_html = clean_html(output.as_str());
 
         file.write_all(clean_html.as_bytes())?;
 

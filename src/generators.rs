@@ -1,4 +1,5 @@
 use crate::blog::Post;
+use crate::parsers::clean_html;
 use crate::readers::File;
 
 use pulldown_cmark::{html, Options, Parser};
@@ -44,14 +45,7 @@ impl Twig {
             .unwrap();
         let html = tera.render(path, &data)?;
 
-        let mut clean_html = Regex::new(r"\r?\n")
-            .unwrap()
-            .replace_all(&html, "")
-            .to_string();
-        clean_html = Regex::new(r">\s+<")
-            .unwrap()
-            .replace_all(&clean_html, "><")
-            .to_string();
+        let clean_html = clean_html(html.as_str());
 
         Ok(clean_html)
     }
