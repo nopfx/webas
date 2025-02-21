@@ -43,7 +43,17 @@ impl Twig {
             .to_str()
             .unwrap();
         let html = tera.render(path, &data)?;
-        Ok(html)
+
+        let mut clean_html = Regex::new(r"\r?\n")
+            .unwrap()
+            .replace_all(&html, "")
+            .to_string();
+        clean_html = Regex::new(r">\s+<")
+            .unwrap()
+            .replace_all(&clean_html, "><")
+            .to_string();
+
+        Ok(clean_html)
     }
 }
 
@@ -55,7 +65,7 @@ impl Markdown {
     pub fn to_post(&self) -> Result<Post, Error> {
         let content = self.file.content().unwrap_or("".into());
 
-        let re = Regex::new(r"(?s)---(.*?)\n(.*?)\n---(.*?)\n(.*)").expect("Cant make regex");
+        let re = Regex::new(r"(?s)^---\s*\n(.*?)\n---\s*\n(.*)").expect("Cant make regex");
         let captures = re
             .captures(content.as_str())
             .expect("Meta required for Markdowns");
