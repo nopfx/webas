@@ -63,7 +63,7 @@ impl<'a> Blog<'a> {
             let save_location = format!("{}/{}.{}", self.config.destination_dir, file_stem, "html");
             let mut file = stdFile::create(&save_location).unwrap();
 
-            html = html.lines().map(str::trim).collect::<Vec<_>>().join("");
+            html = self.minify_html(&html);
 
             file.write_all(html.as_bytes()).unwrap()
         }
@@ -96,10 +96,35 @@ impl<'a> Blog<'a> {
             context.insert("post", post);
             let output = tera.render(&post_html_path.to_string(), &context).unwrap();
 
-            let html = output.lines().map(str::trim).collect::<Vec<_>>().join("");
+            let html = &self.minify_html(&output);
 
             file.write_all(html.as_bytes()).unwrap()
         }
         println!("[+] Post: All posts created!")
+    }
+
+    fn minify_html(&self, html: &str) -> String {
+        let mut result = String::new();
+        let mut in_pre = false;
+
+        for line in html.lines() {
+            let trimmed = line.trim();
+
+            if trimmed.contains("<pre") {
+                in_pre = true;
+            }
+
+            if in_pre {
+                result.push_str(line); // preserve original line (with indentation)
+            } else {
+                result.push_str(trimmed); // trim and join
+            }
+
+            if trimmed.contains("</pre>") {
+                in_pre = false;
+            }
+        }
+
+        result
     }
 }
