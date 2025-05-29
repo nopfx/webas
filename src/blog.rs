@@ -105,23 +105,25 @@ impl<'a> Blog<'a> {
 
     fn minify_html(&self, html: &str) -> String {
         let mut result = String::new();
-        let mut in_pre = false;
+        let mut inside_preserve_block = false;
 
         for line in html.lines() {
             let trimmed = line.trim();
 
-            if trimmed.contains("<pre") {
-                in_pre = true;
+            if !inside_preserve_block && (trimmed.contains("<pre") || trimmed.contains("<code")) {
+                inside_preserve_block = true;
             }
 
-            if in_pre {
-                result.push_str(line); // preserve original line (with indentation)
+            if inside_preserve_block {
+                result.push_str(line); // Preserve formatting
+                result.push('\n');
             } else {
-                result.push_str(trimmed); // trim and join
+                result.push_str(trimmed); // Minify line
             }
 
-            if trimmed.contains("</pre>") {
-                in_pre = false;
+            if inside_preserve_block && (trimmed.contains("</pre>") || trimmed.contains("</code>"))
+            {
+                inside_preserve_block = false;
             }
         }
 
