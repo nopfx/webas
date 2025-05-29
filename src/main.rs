@@ -28,15 +28,15 @@ fn main() -> Result<(), Box<dyn Error>> {
     }
 
     match file::assets(&config) {
-        Ok(_) => println!("[+] assets: copied successfully!"),
+        Ok(_) => println!("[+] Assets: copied successfully!"),
         Err(e) => return Err(format!("[-] assets: Something is wrong: {} ", e).into()),
     }
 
     let posts = file::get_all::<post::Post>(&config);
-    println!("[+] posts: found {} posts", posts.len());
+    println!("[+] Posts: found {} posts", posts.len());
 
     let pages = file::get_all::<page::Page>(&config);
-    println!("[+] pages: found {} pages", pages.len());
+    println!("[+] Pages: found {} pages", pages.len());
 
     let blog = blog::Blog::new(pages, posts, &config);
     println!("[+] Blog: Initialized!");

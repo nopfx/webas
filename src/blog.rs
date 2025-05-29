@@ -61,11 +61,13 @@ impl<'a> Blog<'a> {
                 .expect("[-] Page: wrong page name");
 
             let save_location = format!("{}/{}.{}", self.config.destination_dir, file_stem, "html");
-            let mut file = stdFile::create(&save_location).unwrap();
+            let mut file =
+                stdFile::create(&save_location).expect("[-] Page: cannot create a template");
 
             html = self.minify_html(&html);
 
-            file.write_all(html.as_bytes()).unwrap()
+            file.write_all(html.as_bytes())
+                .expect("[-] Page: cannot write to file")
         }
         println!("[+] Page: All pages created!");
     }
@@ -90,15 +92,19 @@ impl<'a> Blog<'a> {
             html.push_str(&body);
 
             let template_pages = format!("{}/{}", self.config.source_dir, "/pages/**/*");
-            let mut tera = Tera::new(&template_pages).unwrap();
+            let mut tera =
+                Tera::new(&template_pages).expect("[-] Post: cannot create HTML template");
             let _ = tera.add_raw_template(&post_html_path.to_string(), html.as_str());
             let mut context = Context::new();
             context.insert("post", post);
-            let output = tera.render(&post_html_path.to_string(), &context).unwrap();
+            let output = tera
+                .render(&post_html_path.to_string(), &context)
+                .expect("[-] Post: Cannot render template");
 
             let html = &self.minify_html(&output);
 
-            file.write_all(html.as_bytes()).unwrap()
+            file.write_all(html.as_bytes())
+                .expect("[-] Post: cannot write to file")
         }
         println!("[+] Post: All posts created!")
     }
