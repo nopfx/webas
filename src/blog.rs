@@ -49,7 +49,7 @@ impl<'a> Blog<'a> {
             let mut context = Context::new();
             context.insert("posts", &self.posts);
 
-            let html = tera
+            let mut html = tera
                 .render(&page_html_path, &context)
                 .expect("[-] Page: wrong page template");
 
@@ -62,6 +62,8 @@ impl<'a> Blog<'a> {
 
             let save_location = format!("{}/{}.{}", self.config.destination_dir, file_stem, "html");
             let mut file = stdFile::create(&save_location).unwrap();
+
+            html = html.lines().map(str::trim).collect::<Vec<_>>().join("");
 
             file.write_all(html.as_bytes()).unwrap()
         }
@@ -94,7 +96,9 @@ impl<'a> Blog<'a> {
             context.insert("post", post);
             let output = tera.render(&post_html_path.to_string(), &context).unwrap();
 
-            file.write_all(output.as_bytes()).unwrap()
+            let html = output.lines().map(str::trim).collect::<Vec<_>>().join("");
+
+            file.write_all(html.as_bytes()).unwrap()
         }
         println!("[+] Post: All posts created!")
     }
