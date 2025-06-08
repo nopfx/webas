@@ -14,10 +14,10 @@ fn panic() {
     )
 }
 fn main() -> Result<(), Box<dyn Error>> {
-    let config = config::Config {
-        source_dir: argc::get::<String>("src").unwrap_or("".into()),
-        destination_dir: argc::get::<String>("dst").unwrap_or("".into()),
-    };
+    let config = config::Config::new(
+        argc::get::<String>("src").unwrap_or("".into()),
+        argc::get::<String>("dst").unwrap_or("".into()),
+    );
 
     if config.source_dir.len() <= 0
         || config.destination_dir.len() <= 0

@@ -74,7 +74,7 @@ impl<'a> Blog<'a> {
 
     fn create_posts(&self) {
         for post in &self.posts {
-            let post_slug = post.meta.slug.as_deref().unwrap_or("".into());
+            let post_slug = post.meta.slug.as_deref().unwrap_or("");
             let post_html_path = format!("{}/{}", self.config.destination_dir, post_slug);
 
             let mut file = stdFile::create(Path::new(&post_html_path))

@@ -1,4 +1,4 @@
-use fs_extra::dir::{copy, CopyOptions};
+use fs_extra::dir::{CopyOptions, copy};
 use fs_extra::error::Error as FsError;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -31,13 +31,13 @@ pub fn get_all<T: FileType>(template: &config::Config) -> Vec<File> {
 
 pub fn assets(config: &config::Config) -> Result<u64, FsError> {
     let src_assets = PathBuf::from(format!("{}/{}", config.source_dir, "assets"));
-    let dst_assets = PathBuf::from(format!("{}/{}", config.destination_dir, "assets"));
+    let dst_assets = PathBuf::from(format!("{}/{}", config.destination_dir, "."));
 
     copy_files(&src_assets, &dst_assets)
 }
 
 fn copy_files(src: &Path, dst: &Path) -> Result<u64, FsError> {
-    let options = CopyOptions::new().copy_inside(true).overwrite(true);
+    let options = CopyOptions::new().copy_inside(false).overwrite(true);
     copy(src, dst, &options)
 }
 

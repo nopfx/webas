@@ -1,5 +1,5 @@
 use crate::file;
-use pulldown_cmark::{html, Options, Parser};
+use pulldown_cmark::{Options, Parser, html};
 use regex::Regex;
 use serde_yaml;
 
