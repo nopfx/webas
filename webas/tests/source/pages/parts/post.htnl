@@ -1,0 +1,9 @@
+<html>
+<head>
+</head>
+<body>
+<h1> Cia posto inner page</h1>
+{{ Post.html }}
+{% include ./tests/source/pages/parts/script.htnl %}
+</body>
+</html>

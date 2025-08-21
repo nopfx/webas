@@ -1,0 +1,15 @@
+<html>
+<head>
+</head>
+<body>
+<h1>Posts</h1>
+
+{% for PostsContext.posts %}
+<h3>{{Post.meta.PostMeta.title}}</h3>
+<p><b>{{Post.intro}}</b></p>
+<hr />
+{% endfor %}
+
+{% include ./tests/source/pages/parts/script.htnl %}
+</body>
+</html>
