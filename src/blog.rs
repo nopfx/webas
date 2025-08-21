@@ -1,12 +1,9 @@
 use crate::config::Config;
-use crate::file::File;
+use crate::filemanager::{save, Resource};
 use crate::page::Page;
 use crate::post::Post;
 
-use std::fs::File as stdFile;
-use std::io::Write;
-use std::path::Path;
-use tera::{Context, Tera};
+use htnl::{builder::Builder, contextable::Contextable, render};
 
 #[derive(Debug)]
 pub struct Blog<'a> {
@@ -15,124 +12,65 @@ pub struct Blog<'a> {
     pub posts: Vec<Post>,
 }
 
+htnl::context! {
+    struct PostsContext {
+        posts: Vec<Post>
+    }
+}
+
 impl<'a> Blog<'a> {
-    pub fn new(page_files: Vec<File>, post_files: Vec<File>, config: &Config) -> Blog {
-        // convert to pages
-        let pages: Vec<Page> = page_files.iter().map(|pf| pf.clone().into()).collect();
-        // convert to posts
-        let posts: Vec<Post> = post_files.iter().map(|pf| pf.clone().into()).collect();
+    pub fn new(pages_list: Vec<Resource>, posts_list: Vec<Resource>, config: &Config) -> Blog {
+        let pages: Vec<Page> = pages_list.iter().map(|f| f.clone().into()).collect();
+        let posts: Vec<Post> = posts_list.iter().map(|f| f.clone().into()).collect();
 
         Blog {
             config: &config,
-            pages: pages,
-            posts: posts,
+            pages,
+            posts,
         }
     }
 
     pub fn create(&self) {
-        // Create posts
-        self.create_posts();
-        // create pages
-        self.create_pages();
+        let posts = PostsContext {
+            posts: self.posts.clone(),
+        };
+        self.create_pages(&posts);
+        self.create_posts(&posts);
     }
 
-    fn create_pages(&self) {
+    fn create_pages(&self, posts: &PostsContext) {
         for page in &self.pages {
-            let page_html_path =
-                format!("{}/{}/{}", self.config.source_dir, "pages", page.filename);
-            let template_pages = format!("{}/{}", self.config.source_dir, "pages/**/*");
-            let mut tera =
-                Tera::new(template_pages.as_str()).expect("[-] Page: Cannot load twig template");
-            tera.add_raw_template(page_html_path.as_str(), page.content.as_str())
-                .expect("[-] Page: wrong page template");
+            let context = posts.flatten();
 
-            let mut context = Context::new();
-            context.insert("posts", &self.posts);
+            let htdl = Builder {
+                context,
+                content: page.content.to_string(),
+            };
 
-            let mut html = tera
-                .render(&page_html_path, &context)
-                .expect("[-] Page: wrong page template");
+            let compiled = htdl.build();
 
-            let path = Path::new(page_html_path.as_str());
-            let file_stem: &str = path
-                .file_stem()
-                .unwrap()
-                .to_str()
-                .expect("[-] Page: wrong page name");
+            let filename_tosave = page.filename.replace(".htnl", ".html");
+            let fullpath = format!("{}/{}", self.config.destination_dir, filename_tosave);
 
-            let save_location = format!("{}/{}.{}", self.config.destination_dir, file_stem, "html");
-            let mut file =
-                stdFile::create(&save_location).expect("[-] Page: cannot create a template");
-
-            html = self.minify_html(&html);
-
-            file.write_all(html.as_bytes())
-                .expect("[-] Page: cannot write to file")
+            save(fullpath, &compiled.as_bytes());
         }
-        println!("[+] Page: All pages created!");
+        println!("[+] All pages created!");
     }
 
-    fn create_posts(&self) {
-        for post in &self.posts {
-            let post_slug = post.meta.slug.as_deref().unwrap_or("");
-            let post_html_path = format!("{}/{}", self.config.destination_dir, post_slug);
+    fn create_posts(&self, posts: &PostsContext) {
+        for post in &posts.posts {
+            let slug = &post.meta.slug.as_deref().unwrap_or_default();
+            let filepath = format!("{}/{}", self.config.destination_dir.trim(), slug.trim());
 
-            let mut file = stdFile::create(Path::new(&post_html_path))
-                .expect("[-] Post: Cannot create a post file");
-            let mut html = String::new();
+            if let Some(base) = &post.meta.base_resource {
+                let templatepath = format!("{}/{}", self.config.source_dir.trim(), base.trim());
+                let context = post.flatten();
 
-            if let Some(base) = &post.meta.template_base {
-                let tbase = format!("{} \"{}\" {}", "{%extends", base, "%}");
-                html.push_str(&tbase);
-            }
+                let compiled = render(templatepath.as_str(), context);
 
-            let body =
-                String::from("{% block main %}") + post.html.as_str() + "{% endblock main %}";
-
-            html.push_str(&body);
-
-            let template_pages = format!("{}/{}", self.config.source_dir, "/pages/**/*");
-            let mut tera =
-                Tera::new(&template_pages).expect("[-] Post: cannot create HTML template");
-            let _ = tera.add_raw_template(&post_html_path.to_string(), html.as_str());
-            let mut context = Context::new();
-            context.insert("post", post);
-            let output = tera
-                .render(&post_html_path.to_string(), &context)
-                .expect("[-] Post: Cannot render template");
-
-            let html = &self.minify_html(&output);
-
-            file.write_all(html.as_bytes())
-                .expect("[-] Post: cannot write to file")
-        }
-        println!("[+] Post: All posts created!")
-    }
-
-    fn minify_html(&self, html: &str) -> String {
-        let mut result = String::new();
-        let mut inside_preserve_block = false;
-
-        for line in html.lines() {
-            let trimmed = line.trim();
-
-            if !inside_preserve_block && (trimmed.contains("<pre") || trimmed.contains("<code")) {
-                inside_preserve_block = true;
-            }
-
-            if inside_preserve_block {
-                result.push_str(line); // Preserve formatting
-                result.push('\n');
-            } else {
-                result.push_str(trimmed); // Minify line
-            }
-
-            if inside_preserve_block && (trimmed.contains("</pre>") || trimmed.contains("</code>"))
-            {
-                inside_preserve_block = false;
+                save(filepath, &compiled.as_bytes());
             }
         }
-
-        result
+        println!("[+] All posts created");
     }
 }

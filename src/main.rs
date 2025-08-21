@@ -1,47 +1,31 @@
 mod argc;
 mod blog;
 mod config;
-mod file;
+mod filemanager;
 mod page;
 mod post;
 
-use std::error::Error;
 use std::path::Path;
 
-fn panic() {
-    panic!(
-        "Usage:\n\nwebas --src <TEMPLATE> --dst <HTML_DESTINATION>\nDirectories must exists!\n\n"
-    )
-}
-fn main() -> Result<(), Box<dyn Error>> {
+fn main() {
     let config = config::Config::new(
-        argc::get::<String>("src").unwrap_or("".into()),
-        argc::get::<String>("dst").unwrap_or("".into()),
+        argc::get::<String>("src").unwrap_or_default(),
+        argc::get::<String>("dst").unwrap_or_default(),
     );
 
-    if config.source_dir.len() <= 0
-        || config.destination_dir.len() <= 0
-        || !Path::new(&config.source_dir).exists()
-        || !Path::new(&config.destination_dir).exists()
-    {
-        panic();
+    if !Path::new(&config.source_dir).exists() || !Path::new(&config.destination_dir).exists() {
+        panic!("\n\nProbably wrong arguments,\nUsage:\n\n\t--src <ource files folder>\n\t--dst <compiled web files folder>\n\nThese directories required!");
     }
 
-    match file::assets(&config) {
-        Ok(_) => println!("[+] Assets: copied successfully!"),
-        Err(e) => return Err(format!("[-] assets: Something is wrong: {} ", e).into()),
-    }
+    filemanager::copy_all(
+        &format!("{}/{}", &config.source_dir, "assets"),
+        &format!("{}/{}", &config.destination_dir, "assets"),
+    )
+    .expect("Cannot copy assets");
 
-    let posts = file::get_all::<post::Post>(&config);
-    println!("[+] Posts: found {} posts", posts.len());
-
-    let pages = file::get_all::<page::Page>(&config);
-    println!("[+] Pages: found {} pages", pages.len());
+    let posts = filemanager::list::<post::Post>(&config);
+    let pages = filemanager::list::<page::Page>(&config);
 
     let blog = blog::Blog::new(pages, posts, &config);
-    println!("[+] Blog: Initialized!");
-
     blog.create();
-
-    Ok(())
 }
